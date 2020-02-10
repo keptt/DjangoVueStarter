@@ -3,6 +3,6 @@ from .models import Product
 
 
 class ProductSerializer(ModelSerializer):
-    class MetaL:
+    class Meta:
         model = Product
-        fields = ['name', 'description']
+        fields = ('name', 'description')
