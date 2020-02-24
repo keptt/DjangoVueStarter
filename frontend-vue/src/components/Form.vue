@@ -1,22 +1,120 @@
 <template>
-    <div class="container">
-    <form id="contact" action="" method="post">
+    <div class="container" id="contact">
+    <form @submit="addProduct"> <!-- action="" method="post"-->
         <h3>Enter info beneath</h3>
         <fieldset>
-            <input placeholder="Name..." type="text" tabindex="4" required>
+            <input v-model="prodName" placeholder="Name..." type="text" tabindex="4" required>
         </fieldset>
         <fieldset>
-            <textarea placeholder="Description..." tabindex="5" required></textarea>
+            <textarea v-model="prodDesc" placeholder="Description..." tabindex="5" required></textarea>
         </fieldset>
         <fieldset>
-            <button name="submit" type="submit" id="contact-submit" data-submit="...Sending">Submit</button>
-        </fieldset>
-        <fieldset>
-            <button name="show" type="show" id="show">Show</button>
+            <button name="submit" type="submit" id="contact-submit" data-submit="...Sending">Add</button>
         </fieldset>
     </form>
+        <button name="show" type="show" id="show" @click="getProducts">{{ showButton }}</button>
+
+        <div class="contents" v-bind:class="{'hidden': hide}">Products:</div>
+
+        <div v-bind:key="product.id" v-for="product in products">
+            <br>
+            <button @click="deleteProduct(product.id)" class="del-btn" title="Delete item">X</button>
+            <button @click="updateProduct(product)" class="round-btn" title="Update item">U</button>
+            <div id="item" contenteditable="true" @blur="onEdit($event, product.id)">
+                <h3>{{ product.name }}</h3>
+                <h4>{{ product.description }}</h4>
+            </div>
+        </div>
     </div>
 </template>
+
+
+<script>
+import axios from 'axios';
+
+export default {
+    name: "Form"
+    , data() {
+        return {
+            products: []
+            , hide: true
+            , showButton: 'Show'
+            , prodName: ''
+            , prodDesc: ''
+        }
+    }
+    , methods: {
+        getProducts() {
+            if (this.showButton === 'Show') {
+                this.hide = false;
+                this.showButton = 'Hide';
+
+                axios.get('http://127.0.0.1:8000/api/products'
+                ).then(response => {
+                    // console.log(response.data);
+                    this.products = response.data;
+                    // console.log('Here_', this.products);
+                }).catch(err => console.log(err));
+            }
+            else {
+                this.hide = true;
+                this.showButton = 'Show';
+                this.products = [];
+            }
+            // console.log('Here', this.products);
+        }
+        , addProduct() {
+            const newProduct = {
+                name: this.prodName
+                , description: this.prodDesc
+            }
+
+            axios.post('http://127.0.0.1:8000/api/products', newProduct
+            )
+            .catch(err => console.log(err));
+        }
+        , deleteProduct(id) {
+            axios.delete(`http://127.0.0.1:8000/api/products/${id}`
+            ).catch(err => console.log(err));
+
+            this.products = this.products.filter(product => product.id !== id);
+        }
+        , updateProduct(product) {
+            // console.log('Updating...');
+            // console.log(id);
+            // console.log(product.id);
+            // console.log(product);
+            // let product = this.products.filter(element => {
+            //     console.log('>-', element.id);
+            //     return element.id === id;
+            // });
+
+            console.log(product);
+
+            axios.put(`http://127.0.0.1:8000/api/products/${product.id}`, {
+                'name': product.name
+                , 'description': product.description
+            }).catch(err => console.log(err));
+        }
+        , onEdit(evt, id) {
+            let contents = evt.target.innerText;
+            let contentArray = contents.split("\n");
+
+            // console.log(contentArray);
+            for (let i=0; i < this.products.length; ++i) {
+                if (this.products[i].id === id) {
+                    this.products[i] = {'id': id
+                                , 'name': contentArray[0]
+                                , 'description': contentArray[1]
+                            };
+                }
+            }
+            console.log(this.products);
+        }
+    }
+}
+</script>
+
 
 <style>
     @import url(https://fonts.googleapis.com/css?family=Roboto:400,300,600,400italic);
@@ -42,11 +140,52 @@
         background: #4CAF50;
     }
 
+    .round-btn {
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        float: right;
+        padding: 5px 9px;
+        margin-right: 5px;
+    }
+
+    .round-btn:hover {
+        background: #DADADA;
+        transition: 0.5s;
+    }
+
+    .del-btn {
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        float: right;
+        padding: 5px 9px;
+    }
+
+    .del-btn:hover {
+        background: #F74E4E;
+        color: white;
+        transition: 0.5s;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .contents {
+        text-align: left;
+    }
+
     .container {
         max-width: 400px;
         width: 100%;
         margin: 0 auto;
-        position: relative;
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        -ms-transform: translateX(-50%) translateY(-50%);
+        -webkit-transform: translate(-50%,-50%);
+        transform: translate(-50%,-50%);
     }
 
 

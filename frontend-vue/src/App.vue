@@ -11,7 +11,7 @@
 
 
 <script>
-  import Form from './components/Form.vue'
+  import Form from './components/Form'
 
   export default {
     name: 'app'
